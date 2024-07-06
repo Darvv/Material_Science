@@ -1,0 +1,32 @@
+units		metal
+boundary	p p p
+atom_style      atomic 
+
+variable T1 equal 3000
+variable T2 equal 3000 ####################################
+variable T_window equal 50.0
+variable T_fraction equal 0.98
+variable Namein string "infile" ##########In file name !!!!
+variable RunMSD equal 100000
+variable StepMSD equal 20000
+timestep 0.0001 ##################################!!!
+
+read_data ${Namein} ##########################\\\
+
+#replicate 1 1 1
+
+pair_style deepmd /s/ls4/users/mikheen/test_vv/Levashov/pp/frozen_model_compressed.pb fparam_from_compute TEMP ####################+++++++++++
+pair_coeff    * *
+
+compute    TEMP all temp  #######################################
+
+velocity        all create ${T1} 43454 dist gaussian mom yes
+
+fix 1 all nve 
+fix 3 all temp/rescale 1 ${T1} ${T2} ${T_window} ${T_fraction}###########################
+
+compute omsd all msd com no average no #######################################
+fix 100 all momentum 10 linear 1 1 1 rescale #######################################
+fix 11 all ave/time 1 ${StepMSD} ${StepMSD} c_omsd[1] c_omsd[2] c_omsd[3] c_omsd[4] file ${Namein}_msd.dat start 0 ########################
+
+run ${RunMSD}
